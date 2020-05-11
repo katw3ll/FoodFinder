@@ -1,85 +1,134 @@
 package com.example.foodfinder;
 
 import android.content.Context;
-import android.os.Environment;
-import android.util.Log;
 
-import com.example.foodfinder.Models.VersionApi;
-import com.example.foodfinder.Util.JsonParser;
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 
-import org.json.JSONException;
+import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
+
 
 public class APIHandler {
     private String apiUrl = "https://apidata.mos.ru/v1/datasets/1903/rows?$top=5000";
     private String versionUrl = "https://apidata.mos.ru/v1/datasets/1903/version";
     private String apiKey = "api_key=dc1e343a94767732736a858f05dd4a98";
 
+    private RequestQueue mQueue;
+
     private String versionPathName = "version.json";
     private String dataFileName = "data.json";
 
-    private final JsonParser jsonParser;
+    final private String LOG_TAG = "DebugTest";
+
+    private Context context;
+
 
     public APIHandler(Context context) throws IOException {
-        jsonParser = new JsonParser();
-        Log.i("APP-CREATE", "Создание файла");
-        FileOutputStream fileOutputStream = context.openFileOutput("simplefile.txt", context.MODE_PRIVATE);
-        OutputStreamWriter outputWriter = new OutputStreamWriter(fileOutputStream);
-        outputWriter.write("Test".toString());
-        outputWriter.close();
-
-        Log.i("APP-CREATE", "Создан");
-
-        Log.i("Test", "Файлы созданы");
-
-//        if(checkVersion()){
-//            Log.d("Test","Oops, Something wrong with URL...");
-//        }
-
-        Log.d("Test","Oops, Something wrong with URL...");
+        mQueue = Volley.newRequestQueue(context);
+        this.context = context;
+        checkVersion();
     }
 
 
-    public boolean checkVersion(){
+    private void checkVersion() throws IOException {
+        String url = versionUrl + "?" + apiKey;
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        String currentVersion = response.toString();
+                        String version = "";
+                        try {
+                            BufferedReader br = new BufferedReader(new InputStreamReader(
+                                    context.openFileInput(versionPathName)));
+                            version = br.readLine();
+                        } catch (IOException e) {
+                            saveVersion(currentVersion);
+                            e.printStackTrace();
+                        }
+                        System.out.println(currentVersion);
+                        System.out.println(version);
+                        if (!currentVersion.equals(version)){
+                            saveVersion(currentVersion);
+                            getNewData();
+                        }else{
+                            System.out.println("Файл не обновлен");
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        });
+
+        mQueue.add(request);
+
+    }
+
+    private void saveVersion(String version) {
+        FileOutputStream outputStream = null;
         try {
-            URL url = new URL(versionUrl + "" + apiKey);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestProperty("Content-Type", "application/json; utf-8");
-            connection.connect();
-
-            InputStream in;
-            int status = connection.getResponseCode();
-            if (status != HttpURLConnection.HTTP_OK) {
-                in = connection.getErrorStream();
-            } else {
-                in = connection.getInputStream();
-            }
-
-            VersionApi versionGet = jsonParser.getVersion(in);
-            in.close();
-            in = new FileInputStream(versionPathName);
-            VersionApi versionFile = jsonParser.getVersion(in);
-
-            if (versionFile == versionGet){
-                return true;
-            }
-
-        }catch (IOException e) {
+            outputStream = context.openFileOutput(versionPathName, Context.MODE_PRIVATE);
+            outputStream.write(version.getBytes());
+            outputStream.flush();
+            outputStream.close();
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
-        } catch (JSONException e) {
-            return false;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        return false;
+    }
+
+    private void getNewData() {
+        System.out.println("Получаем файл");
+        String url = apiUrl + "&" + apiKey;
+
+        StringRequest request = new StringRequest (Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            BufferedWriter bw =  new BufferedWriter(new OutputStreamWriter(
+                                    context.openFileOutput(dataFileName, context.MODE_PRIVATE)));
+                            bw.write(response);
+                            System.out.println("Записан файл");
+                            // закрываем поток
+                            bw.close();
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        // пишем данные
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        });
+        request.setRetryPolicy(new DefaultRetryPolicy(
+                999999999,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        mQueue.add(request);
     }
 
 }

@@ -18,7 +18,9 @@ import com.yandex.mapkit.Animation;
 import com.yandex.mapkit.MapKitFactory;
 import com.yandex.mapkit.geometry.Point;
 import com.yandex.mapkit.map.CameraPosition;
+import com.yandex.mapkit.map.MapObject;
 import com.yandex.mapkit.map.MapObjectCollection;
+import com.yandex.mapkit.map.MapObjectTapListener;
 import com.yandex.mapkit.mapview.MapView;
 import com.yandex.runtime.image.ImageProvider;
 
@@ -36,12 +38,7 @@ public class MainActivity extends AppCompatActivity {
 
     private MapView mapview;
 
-    private String versionPathName = "version.json";
-    private String dataFileName = "data.json";
-
-
-//    private APIHandler api;
-
+    private APIHandler api;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -49,13 +46,13 @@ public class MainActivity extends AppCompatActivity {
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.navigation_menu1:
-
+                    System.out.println("");
                     return true;
                 case R.id.navigation_menu2:
-
+                    System.out.println("SECOND SELECTED");
                     return true;
                 case R.id.navigation_menu3:
-
+                    System.out.println("THIRD SELECTED");
                     return true;
             }
             return false;
@@ -64,27 +61,13 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.i("Test TAG", "Это мое сообщение для записи в журнале");
 
         try {
-            String FILENAME = "user_details";
-            String name = "suresh";
-
-            String pathJson = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/AlarmHouses.json";
-            File fileJson = new File(pathJson);
-
-            fileJson.createNewFile();
-            PrintWriter out = new PrintWriter(fileJson);
-            out.close();
-
-
-
-//            api = new APIHandler(this);
-            Log.i("Test", "Api создано =================");
+            api = new APIHandler(this);
         } catch (IOException e) {
-            Log.i("Test","Oops, Something wrong with URL...");
             e.printStackTrace();
         }
+
 
         super.onCreate(savedInstanceState);
         MapKitFactory.setApiKey(MAPKIT_API_KEY);
@@ -98,23 +81,35 @@ public class MainActivity extends AppCompatActivity {
                 new Animation(Animation.Type.SMOOTH, 0),
                 null);
 
+        MapObjectTapListener listener = new MapObjectTapListener() {
+            @Override
+            public boolean onMapObjectTap(MapObject mapObject, Point point) {
+                Log.d("TEST_TAG", "something");
+                System.out.println("something");
+                return false;
+            }
+        };
 
+        MapObjectCollection mapObjects = mapview.getMap().getMapObjects();
 
-        mapview.getMap().getMapObjects()
-                .addPlacemark(
-                        new Point(55.751574, 37.573856),
-                        ImageProvider.fromResource(this, R.drawable.ic_burger)
-                );
+        mapObjects.addPlacemark(
+                new Point(55.751574, 37.573856),
+                ImageProvider.fromResource(this, R.drawable.ic_burger)
+        );
+
+        mapObjects.addTapListener(listener);
+
+//        mapview.getMap().getMapObjects()
+//                .addPlacemark(
+//                        new Point(55.751574, 37.573856),
+//                        ImageProvider.fromResource(this, R.drawable.ic_burger)
+//                );
+
         mapview.getMap().getMapObjects()
                 .addPlacemark(
                         new Point(55.772699, 37.681056),
                         ImageProvider.fromResource(this, R.drawable.ic_burger)
                 );
-//        mapview.getMap().getMapObjects()
-//                .addPlacemark(
-//                        new Point(55.532966, 37.527265),
-//                        ImageProvider.fromResource(this, R.drawable.ic_my)
-//                );
 
 
     }
