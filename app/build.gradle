@@ -46,7 +46,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
-        // Основная библиотека MapKit.
+    // Основная библиотека MapKit.
     implementation 'com.yandex.android:mapkit:3.5.0'
     // Дополнительные модули MapKit.
     // Удалите зависимости если ваше приложение не использует их.

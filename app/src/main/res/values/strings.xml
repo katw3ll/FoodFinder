@@ -15,4 +15,11 @@
     <string name="title_menu1">Test1</string>
     <string name="title_menu2">Test2</string>
     <string name="title_menu3">Test3</string>
+    <string name="title_activity_panorama">PanoramaActivity</string>
+
+
+    <string name="not_found_error_message">Not found</string>
+    <string name="network_error_message">Network error</string>
+    <string name="remote_error_message">Remote server error</string>
+    <string name="unknown_error_message">Unknown error</string>
 </resources>
