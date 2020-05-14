@@ -1,29 +1,43 @@
 package com.example.foodfinder;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Bundle;
-import android.os.Environment;
-import android.support.annotation.NonNull;
-import android.support.design.widget.BottomNavigationView;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
-import android.view.View;
-import android.view.Menu;
+
+
+import android.util.DisplayMetrics;
+import android.util.JsonReader;
+
 import android.view.MenuItem;
-import android.widget.Toast;
+import android.view.WindowManager;
+
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.foodfinder.Model.PlacePoint;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import com.ismaeldivita.chipnavigation.ChipNavigationBar;
+import com.ismaeldivita.chipnavigation.ChipNavigationBar.OnItemSelectedListener;
 
 import com.yandex.mapkit.Animation;
 import com.yandex.mapkit.MapKitFactory;
-import com.yandex.mapkit.geometry.Circle;
-import com.yandex.mapkit.geometry.LinearRing;
+
 import com.yandex.mapkit.geometry.Point;
 import com.yandex.mapkit.geometry.Polygon;
 import com.yandex.mapkit.map.CameraPosition;
 import com.yandex.mapkit.map.CircleMapObject;
+import com.yandex.mapkit.map.Cluster;
+import com.yandex.mapkit.map.ClusterListener;
+import com.yandex.mapkit.map.ClusterTapListener;
+import com.yandex.mapkit.map.ClusterizedPlacemarkCollection;
 import com.yandex.mapkit.map.IconStyle;
 import com.yandex.mapkit.map.MapObject;
 import com.yandex.mapkit.map.MapObjectCollection;
@@ -40,32 +54,44 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ClusterListener {
 
     private final String MAPKIT_API_KEY = "e1454e95-9e09-4fcd-99b0-906ca676b547";
 
     private MapView mapview;
     private MapObjectCollection mapObjects;
+    private ClusterizedPlacemarkCollection clusterizedCollection;
+
+    private List<PlacePoint> cafeList = new ArrayList<>();
+    private List<PlacePoint> canteenList = new ArrayList<>();
+    private List<PlacePoint> barList = new ArrayList<>();
+    private List<PlacePoint> restaurantList = new ArrayList<>();
+    private List<PlacePoint> buffetList = new ArrayList<>();
+
+    int iconId = R.drawable.ic_burger;
 
     private APIHandler api;
 
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-
         try {
             api = new APIHandler(this);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        getPointsFromFile();
 
         super.onCreate(savedInstanceState);
         MapKitFactory.setApiKey(MAPKIT_API_KEY);
@@ -75,79 +101,129 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mapview = (MapView)findViewById(R.id.mapview);
         mapview.getMap().move(
-                new CameraPosition(new Point(55.751574, 37.573856), 11.0f, 0.0f, 0.0f),
-                new Animation(Animation.Type.SMOOTH, 0),
+                new CameraPosition(new Point(55.7522, 37.6156), 11.6f, 0.0f, 0.0f),
+                new Animation(Animation.Type.SMOOTH, 2f),
                 null);
 
         mapObjects = mapview.getMap().getMapObjects().addCollection();
+        clusterizedCollection =
+                mapview.getMap().getMapObjects().addClusterizedPlacemarkCollection(this);
 
+//        setPointsOnMap(restaurantList, iconId);
 
-        PlacemarkMapObject mark = mapObjects.addPlacemark(new Point(55.751574, 37.573856));
-        mark.setIcon(ImageProvider.fromResource(this, R.drawable.ic_burger));
-        mark.addTapListener(listener);
+        ChipNavigationBar menu = findViewById(R.id.navigation);
 
-//        MapObjectCollection mapObjects = mapview.getMap().getMapObjects();
-//        List<Point> polygonPoints = new ArrayList<>();
-//
-//        polygonPoints.add(new Point(55.751574, 37.573856));
-//
-//
-//        ImageProvider img = ImageProvider.fromResource(this, R.drawable.ic_burger);
-//
-//        List<PlacemarkMapObject> polygon = mapObjects.addPlacemarks(
-//                polygonPoints,
-//                ImageProvider.fromResource(this, R.drawable.ic_burger),
-//                new IconStyle()
-//        );
+        menu.setOnItemSelectedListener(mOnNavigationItemSelectedListener);
+
+        menu.setItemSelected(R.id.navigation_restaurant, true);
 
 
 
-
-
-
-
-//        MapObjectTapListener listener = new MapObjectTapListener() {
-//            @Override
-//            public boolean onMapObjectTap(@NonNull MapObject mapObject, @NonNull Point point) {
-//                Log.d("TEST_TAG", "something");
-//                System.out.println("something");
-//                return false;
-//            }
-//        };
-//
-//        MapObjectCollection mapObjects = mapview.getMap().getMapObjects().addCollection();
-//
-//        Point point = new Point(55.751574, 37.573856);
-//
-//        PlacemarkMapObject placemark = mapObjects.addPlacemark(
-//          point, ImageProvider.fromResource(this, R.drawable.ic_burger)
-//        );
-//
-//
-//        placemark.addTapListener(listener);
-//
-//
-//
-////        mapview.getMap().getMapObjects()
-////                .addPlacemark(
-////                        new Point(55.751574, 37.573856),
-////                        ImageProvider.fromResource(this, R.drawable.ic_burger)
-////                );
-//
-//        mapview.getMap().getMapObjects()
-//                .addPlacemark(
-//                        new Point(55.772699, 37.681056),
-//                        ImageProvider.fromResource(this, R.drawable.ic_burger)
-//                );
 
 
     }
 
     private void getPointsFromFile(){
-
+        try {
+            JsonReader reader = new JsonReader(
+                    new InputStreamReader(openFileInput("data.json"), "UTF-8")
+            );
+            reader.beginArray();
+            while (reader.hasNext()) {
+                reader.beginObject();
+                while (reader.hasNext()) {
+                    switch (reader.nextName()){
+                        case "Cells":{
+                            PlacePoint placePoint = new PlacePoint();
+                            reader.beginObject();
+                            while (reader.hasNext()) {
+                                switch (reader.nextName()){
+                                    case "Name":{
+                                        placePoint.setName(reader.nextString());
+                                        break;
+                                    }
+                                    case "TypeObject":{
+                                        placePoint.setType(reader.nextString());
+                                        break;
+                                    }
+                                    case "geoData":{
+                                        reader.beginObject();
+                                        reader.nextName();
+                                        reader.skipValue();
+                                        reader.nextName();
+                                        reader.beginArray();
+                                        placePoint.setLongitude(reader.nextDouble());
+                                        placePoint.setLatitude(reader.nextDouble());
+                                        reader.endArray();
+                                        reader.endObject();
+                                        break;
+                                    }
+                                    default:{
+                                        reader.skipValue();
+                                        break;
+                                    }
+                                }
+                            }
+                            reader.endObject();
+                            switch (placePoint.getType()){
+                                case "кафе":{
+                                    cafeList.add(placePoint);
+                                    break;
+                                }
+                                case "столовая":{
+                                    canteenList.add(placePoint);
+                                    break;
+                                }
+                                case "бар":{
+                                    barList.add(placePoint);
+                                    break;
+                                }
+                                case "ресторан":{
+                                    restaurantList.add(placePoint);
+                                    break;
+                                }
+                                case "буфет":{
+                                    buffetList.add(placePoint);
+                                    break;
+                                }
+                                default:{
+                                    System.out.println(placePoint.getType());
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                        default:{
+                            reader.skipValue();
+                            break;
+                        }
+                    }
+                }
+                reader.endObject();
+            }
+            reader.endArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
+    private void setPointsOnMap(List<PlacePoint> list, int imgId){
+        clusterizedCollection.clear();
+        iconId = imgId;
+        for (PlacePoint point : list) {
+            PlacemarkMapObject mark = clusterizedCollection.addPlacemark(new Point(point.getLatitude(), point.getLongitude()));
+            mark.setIcon(ImageProvider.fromResource(this, imgId));
+            mark.setIconStyle(new IconStyle().setScale(0.6f));
+            mark.addTapListener(listener);
+        }
+        clusterizedCollection.clusterPlacemarks(60, 15);
+    }
 
+    @Override
+    public void onClusterAdded(Cluster cluster) {
+        cluster.getAppearance().setIcon(
+                new TextImageProvider(Integer.toString(cluster.getSize()), iconId));
+    }
 
     private MapObjectTapListener listener = new MapObjectTapListener() {
         @Override
@@ -155,31 +231,13 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, PanoramaActivity.class);
             intent.putExtra("latitude", point.getLatitude());
             intent.putExtra("longitude", point.getLongitude());
-
             startActivity(intent);
             return true;
         }
     };
 
 
-    private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
-            = new BottomNavigationView.OnNavigationItemSelectedListener() {
-        @Override
-        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            switch (item.getItemId()) {
-                case R.id.navigation_menu1:
-                    System.out.println("");
-                    return true;
-                case R.id.navigation_menu2:
-                    System.out.println("SECOND SELECTED");
-                    return true;
-                case R.id.navigation_menu3:
-                    System.out.println("THIRD SELECTED");
-                    return true;
-            }
-            return false;
-        }
-    };
+
 
     @Override
     protected void onStop() {
@@ -193,6 +251,103 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         mapview.onStart();
         MapKitFactory.getInstance().onStart();
+    }
+
+    private ChipNavigationBar.OnItemSelectedListener  mOnNavigationItemSelectedListener
+            = new ChipNavigationBar.OnItemSelectedListener() {
+
+        @Override
+        public void onItemSelected(int id) {
+            switch (id) {
+                case R.id.navigation_cafe:
+                    System.out.println("cafe");
+                    setPointsOnMap(cafeList, R.drawable.ic_cafe);
+                    break;
+                case R.id.navigation_restaurant:
+                    System.out.println("restaurant");
+                    setPointsOnMap(restaurantList, R.drawable.ic_restaurant);
+                    break;
+                case R.id.navigation_bar:
+                    System.out.println("bar");
+                    setPointsOnMap(barList, R.drawable.ic_bar);
+                    break;
+                case R.id.navigation_buffet:
+                    System.out.println("buffet");
+                    setPointsOnMap(buffetList, R.drawable.ic_buffet);
+                    break;
+                case R.id.navigation_canteen:
+                    System.out.println("canteen");
+                    setPointsOnMap(canteenList, R.drawable.ic_canteen);
+                    break;
+            }
+        }
+
+    };
+
+    public class TextImageProvider extends ImageProvider {
+
+        private static final float FONT_SIZE = 15;
+        private static final float MARGIN_SIZE = 3;
+        private static final float SIZE = 2;
+        private static final float STROKE_SIZE = 3;
+
+        @Override
+        public String getId() {
+            return "text_" + text;
+        }
+
+        private final String text;
+        private final int imgId;
+        @Override
+        public Bitmap getImage() {
+            DisplayMetrics metrics = new DisplayMetrics();
+            WindowManager manager = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
+            manager.getDefaultDisplay().getMetrics(metrics);
+
+            Paint textPaint = new Paint();
+            textPaint.setTextSize(FONT_SIZE * metrics.density);
+            textPaint.setTextAlign(Paint.Align.CENTER);
+            textPaint.setStyle(Paint.Style.FILL);
+            textPaint.setAntiAlias(true);
+
+            float widthF = textPaint.measureText(text);
+            Paint.FontMetrics textMetrics = textPaint.getFontMetrics();
+            float heightF = Math.abs(textMetrics.bottom) + Math.abs(textMetrics.top);
+            float textRadius = (float)Math.sqrt(widthF * widthF + heightF * heightF) / 2;
+            float internalRadius = textRadius + MARGIN_SIZE * metrics.density;
+            float externalRadius = internalRadius + STROKE_SIZE * metrics.density;
+
+            int width = (int) (2 * externalRadius + 0.5);
+
+//            Bitmap icon = Bitmap.createScaledBitmap(
+//                    BitmapFactory.decodeResource(getResources(), imgId),
+//                    width, width, false);
+
+            Bitmap bitmap = Bitmap.createBitmap(width, width, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+
+            Paint backgroundPaint = new Paint();
+//            canvas.drawBitmap(icon, 0, 0, backgroundPaint);
+            backgroundPaint.setAntiAlias(true);
+//            float radius = textRadius-15 + metrics.density;
+            backgroundPaint.setColor(Color.BLUE);
+            canvas.drawCircle(width / 2, width / 2, externalRadius, backgroundPaint);
+            backgroundPaint.setColor(Color.WHITE);
+            canvas.drawCircle(width / 2, width / 2, internalRadius, backgroundPaint);
+
+            canvas.drawText(
+                    text,
+                    width / 2,
+                    width / 2 - (textMetrics.ascent + textMetrics.descent) / 2,
+                    textPaint);
+
+            return bitmap;
+        }
+
+        public TextImageProvider(String text, int imgId) {
+            this.text = text;
+            this.imgId = imgId;
+        }
     }
 
 }

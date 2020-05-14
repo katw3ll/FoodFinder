@@ -12,9 +12,14 @@
 
 
     <!-- Strings used for navigation -->
-    <string name="title_menu1">Test1</string>
-    <string name="title_menu2">Test2</string>
-    <string name="title_menu3">Test3</string>
+    <string name="title_cafe">Кафе</string>
+    <string name="title_canteen">Столовые</string>
+    <string name="title_bar">Бары</string>
+    <string name="title_restaurant">Рестораны</string>
+    <string name="title_buffet">Буфеты</string>
+
+
+
     <string name="title_activity_panorama">PanoramaActivity</string>
 
 

@@ -1,17 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:id="@+id/navigation_menu1"
-        android:icon="@drawable/ic_action_set"
-        android:title="@string/title_menu1" />
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/navigation_menu2"
-        android:icon="@drawable/ic_action_set"
-        android:title="@string/title_menu2" />
+        app:cnb_iconColor="@color/nav_menu"
+        app:cnb_backgroundColor="@color/colorItem"
+        android:id="@+id/navigation_cafe"
+        android:icon="@drawable/ic_cafe_menu"
+        android:title="@string/title_cafe" />
 
     <item
-        android:id="@+id/navigation_menu3"
-        android:icon="@drawable/ic_action_set"
-        android:title="@string/title_menu3" />
+        app:cnb_iconColor="@color/colorItem_selected"
+        app:cnb_backgroundColor="@color/colorItem"
+        android:id="@+id/navigation_restaurant"
+        android:icon="@drawable/ic_restaurant_menu"
+        android:title="@string/title_restaurant" />
+
+    <item
+        app:cnb_iconColor="@color/colorItem_selected"
+        app:cnb_backgroundColor="@color/colorItem"
+        android:id="@+id/navigation_bar"
+        android:icon="@drawable/ic_bar_menu"
+        android:title="@string/title_bar" />
+
+    <item
+        app:cnb_iconColor="@color/colorItem_selected"
+        app:cnb_backgroundColor="@color/colorItem"
+        android:id="@+id/navigation_buffet"
+        android:icon="@drawable/ic_buffet_menu"
+        android:title="@string/title_buffet" />
+
+    <item
+        app:cnb_iconColor="@color/colorItem_selected"
+        app:cnb_backgroundColor="@color/colorItem"
+        android:id="@+id/navigation_canteen"
+        android:icon="@drawable/ic_canteen_menu"
+        android:title="@string/title_canteen" />
+
 </menu>
